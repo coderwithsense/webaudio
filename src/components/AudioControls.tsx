@@ -1,22 +1,24 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Pause } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AudioControlsProps {
   streamUrl: string;
-  isPlaying: boolean;
-  setIsPlaying: (playing: boolean) => void;
 }
 
-export function AudioControls({ streamUrl, isPlaying, setIsPlaying }: AudioControlsProps) {
+export function AudioControls({ streamUrl }: AudioControlsProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
+  const [isPlaying, setIsPlaying] = useState<boolean>(false)
 
   useEffect(() => {
-    audioRef.current = new Audio();
+    if(audioRef.current && streamUrl){
+      audioRef.current.src = streamUrl;
+     // audioRef.current = new Audio();
+    }
   }, []);
 
   const togglePlayback = () => {
@@ -29,21 +31,23 @@ export function AudioControls({ streamUrl, isPlaying, setIsPlaying }: AudioContr
       return;
     }
 
+    const audio = audioRef.current;
+    if(!audio) return
+
     if (!isPlaying) {
-      if (audioRef.current) {
-        audioRef.current.src = streamUrl;
-        audioRef.current.play().catch((error) => {
+        audio.play().catch((error) => {
+          setIsPlaying(false)
           toast({
             variant: "destructive",
             title: "Playback Error",
             description: "Failed to play audio stream",
           });
         });
-      }
+        setIsPlaying(true)
     } else {
-      audioRef.current?.pause();
-    }
-    setIsPlaying(!isPlaying);
+        audio.pause()
+        setIsPlaying(false)
+      }
   };
 
   return (

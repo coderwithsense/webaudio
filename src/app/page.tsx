@@ -14,8 +14,7 @@ export default function Index() {
   const { toast } = useToast();
   const [streamUrl, setStreamUrl] = useState('');
   const [volume, setVolume] = useState([50]);
-  const [isPlaying, setIsPlaying] = useState(false);
-
+  
   const handleSync = () => {
     toast({
       title: "Syncing devices...",
@@ -56,8 +55,6 @@ export default function Index() {
 
             <AudioControls
               streamUrl={streamUrl}
-              isPlaying={isPlaying}
-              setIsPlaying={setIsPlaying}
             />
 
             <div className="flex items-center gap-4">
