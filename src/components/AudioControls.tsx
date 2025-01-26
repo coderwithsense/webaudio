@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, Volume2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Slider } from './ui/slider';
 
 interface AudioControlsProps {
   streamUrl: string;
@@ -12,14 +13,18 @@ interface AudioControlsProps {
 export function AudioControls({ streamUrl }: AudioControlsProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
-  const [isPlaying, setIsPlaying] = useState<boolean>(false)
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [volume, setVolume] = useState([0.2])
 
   useEffect(() => {
-    if(audioRef.current && streamUrl){
-      audioRef.current.src = streamUrl;
-     // audioRef.current = new Audio();
-    }
+    audioRef.current = new Audio();
   }, []);
+
+  useEffect(() => {
+    if (audioRef.current && volume.length > 0) {
+      audioRef.current.volume = volume[0];
+    }
+  }), [volume]
 
   const togglePlayback = () => {
     if (!streamUrl) {
@@ -31,28 +36,31 @@ export function AudioControls({ streamUrl }: AudioControlsProps) {
       return;
     }
 
-    const audio = audioRef.current;
-    if(!audio) return
-
     if (!isPlaying) {
-        audio.play().catch((error) => {
-          setIsPlaying(false)
+      if(audioRef.current){
+        if(audioRef.current.src !== streamUrl){ //Optimise
+          audioRef.current.src = streamUrl;
+        }
+        audioRef.current.play().catch((error) => {
           toast({
             variant: "destructive",
             title: "Playback Error",
             description: "Failed to play audio stream",
           });
         });
-        setIsPlaying(true)
-    } else {
-        audio.pause()
-        setIsPlaying(false)
       }
+    } else {
+      if(audioRef.current){
+        audioRef.current.pause();
+      }
+    }
+    setIsPlaying(!isPlaying);
   };
 
   return (
-    <div className="flex justify-center">
-      <Button
+    <div className='flex flex-col gap-y-4'>
+      <div className="flex justify-center items-center">
+        <Button
         onClick={togglePlayback}
         size="lg"
         className="hover-scale w-32"
@@ -63,6 +71,25 @@ export function AudioControls({ streamUrl }: AudioControlsProps) {
           <Play className="w-6 h-6" />
         )}
       </Button>
+      </div>
+      
+
+      <div className='flex justify-center items-center gap-3'>
+              <Volume2 className="w-5 h-5" />
+              <Slider
+                value={volume}
+                onValueChange={(newVolume: number | number[] ) => {
+                  if(Array.isArray(newVolume)){
+                    setVolume(newVolume)
+                  }else{
+                    setVolume([newVolume])
+                  }
+                }}
+                max={1}
+                step={0.1}
+                className="w-full"
+              />
+            </div>
     </div>
   );
 }
