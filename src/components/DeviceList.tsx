@@ -1,10 +1,10 @@
 "use client"
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useEffect, useState } from 'react';
+import { useDeviceList } from '@/context/DeviceListContext';
 
 export function DeviceList() {
-  const [devices, setDevices] = useState([]);
+  const {devices} = useDeviceList()
 
   return (
     <Card className="glass-card p-6">
@@ -17,8 +17,8 @@ export function DeviceList() {
             className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary/80 transition-colors"
           >
             <div className="flex flex-col">
-              <span className="font-medium">Samsung</span>
-              <span className="text-sm text-muted-foreground">120.2.2.767</span>
+              <span className="font-medium">{device.deviceName}</span>
+              <span className="text-sm text-muted-foreground">{device.ipAddress}</span>
             </div>
             <Badge
               variant={'default'}

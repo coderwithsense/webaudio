@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -13,11 +13,19 @@ import {
 } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { ArrowRight } from "lucide-react";
+import { getDeviceInfo, getSocket } from "@/lib/utils";
+import { useDeviceList } from "@/context/DeviceListContext";
 
 
 const RoomControl = () => {
   const { toast } = useToast();
+  const { devices, setDevices } = useDeviceList()
   const [roomCode, setRoomCode] = useState("")
+  const socket = getSocket()
+
+  socket.on("connect", () => {
+    console.log(socket.id)
+  })
 
   const handleCreateRoom = () => {
       toast({
@@ -27,16 +35,20 @@ const RoomControl = () => {
       });
   };
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async() => {
+  const deviceInfo = await getDeviceInfo() 
+  setDevices([deviceInfo])
+  socket.emit("get-device-info", deviceInfo)
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Room code or device info is not available",
+        description: `device info is : ${deviceInfo.deviceName} and ${deviceInfo.ipAddress}`,
       });
   };
 
   return (
     <div className="flex items-center justify-center gap-5">
+      your id is {socket.id}
       <div className="text-center pt-4">
         <Button
           onClick={handleCreateRoom}
