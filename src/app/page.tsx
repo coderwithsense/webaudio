@@ -1,18 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { AudioControls } from "@/components/AudioControls";
 import { DeviceList } from "@/components/DeviceList";
 import RoomControl from "@/components/RoomControl";
-import { io } from "socket.io-client";
 
 export default function Index() {
-
-
-
-
   return (
     <div className="min-h-screen bg-background p-4 md:p-8 ">
       <div className="max-w-4xl mx-auto space-y-8">

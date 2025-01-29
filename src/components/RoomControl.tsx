@@ -13,42 +13,47 @@ import {
 } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { ArrowRight } from "lucide-react";
-import { getDeviceInfo, getSocket } from "@/lib/utils";
-import { useDeviceList } from "@/context/DeviceListContext";
+import { generateRandomCode, getDeviceInfo, getSocket } from "@/lib/utils";
 
 
 const RoomControl = () => {
   const { toast } = useToast();
-  const { devices, setDevices } = useDeviceList()
-  const [roomCode, setRoomCode] = useState("")
+  const [roomCode, setRoomCode] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false)
   const socket = getSocket()
 
   socket.on("connect", () => {
     console.log(socket.id)
   })
 
-  const handleCreateRoom = () => {
+
+  const handleCreateRoom = async () => {
+    const deviceInfo = await getDeviceInfo()  // get the device info    
+    const newRoomCode = generateRandomCode();
+    setRoomCode(newRoomCode);
+    socket.emit("join-room", newRoomCode, deviceInfo) // and send device info to the websocket server 
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Device info is not available",
+        variant: "default",
+        title: "Room Created",
+        description: `Room Created with id: ${newRoomCode}`,
       });
   };
 
   const handleJoinRoom = async() => {
-  const deviceInfo = await getDeviceInfo() 
-  setDevices([deviceInfo])
-  socket.emit("get-device-info", deviceInfo)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `device info is : ${deviceInfo.deviceName} and ${deviceInfo.ipAddress}`,
-      });
+    setIsDialogOpen(false)
+    const deviceInfo = await getDeviceInfo()  // get the device info    
+    socket.emit("join-room", roomCode, deviceInfo); // and send it to the websocket server
+    toast({
+      variant: "default",
+      title: "Room Joined",
+      description: `Room Joined with id: ${roomCode}`,
+    });
+
   };
 
   return (
+    <>
     <div className="flex items-center justify-center gap-5">
-      your id is {socket.id}
       <div className="text-center pt-4">
         <Button
           onClick={handleCreateRoom}
@@ -59,9 +64,9 @@ const RoomControl = () => {
         </Button>
       </div>
       <div className="text-center pt-4">
-        <Dialog>
+        <Dialog open={isDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="hover-scale">
+            <Button onClick={() => setIsDialogOpen(true)} variant="outline" className="hover-scale">
               Join Room
             </Button>
           </DialogTrigger>
@@ -88,12 +93,14 @@ const RoomControl = () => {
               >
                 <ArrowRight />
               </Button>
-              <DialogClose asChild />
+              <DialogClose asChild/>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
     </div>
+      {roomCode && <p className="text-center">Room id: {roomCode}</p>}
+    </>
   );
 };
 

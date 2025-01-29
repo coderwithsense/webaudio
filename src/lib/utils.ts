@@ -19,6 +19,7 @@ export const getDeviceInfo = async () => {
   };
 };
 
+
 let socket:Socket | null = null;
 
 export const getSocket = (): Socket => {
@@ -29,9 +30,19 @@ export const getSocket = (): Socket => {
     return () => {
       if(socket){
       socket.disconnect();
-      console.log("Disconnected from server");
       }
     };
   }, []);
   return socket;
 };
+
+
+export const generateRandomCode = () => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    code += characters[randomIndex];
+  }
+  return code;
+}

@@ -8,20 +8,30 @@ interface DeviceInfo{
 
 const io = new Server({
   cors: {
-    origin: "http://localhost:3000", // Frontend URL
+    origin: "*", // Frontend URL
   },
 });
 
+
+
+
 // Handles client connections
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id, io.engine.clientsCount);
+  let socketClients = io.engine.clientsCount;
+  console.log("User connected:", socket.id, socketClients);
 
   socket.on("disconnect", () => {
-    console.log("User disconnected", io.engine.clientsCount)
+    socketClients--
+    console.log("User disconnected", socketClients)
   });
 
-  socket.on("get-device-info", (deviceInfo: DeviceInfo) => {
-    console.log("Device Info received on server:", deviceInfo.deviceName)
+  socket.on("join-room", (roomCode, deviceInfo) => {
+    socket.join(roomCode);
+    socket.emit("device-info", deviceInfo)
+  });
+  
+  socket.on("get-stream-url", (streamUrl) => {
+    socket.broadcast.emit("set-stream-url", streamUrl); // send the url to all connected devices except who sent url
   })
 
 });
