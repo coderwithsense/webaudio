@@ -7,12 +7,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Slider } from "./ui/slider";
 import { Input } from "./ui/input";
 import { getSocket } from "@/lib/utils";
+import { useRoom } from "@/context/RoomContext";
 
 export function AudioControls() {
   const socket = getSocket();
+  const { roomCode } = useRoom();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
-
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [volume, setVolume] = useState([0.2]);
   const [duration, setDuration] = useState<number>(0);
@@ -34,7 +35,9 @@ export function AudioControls() {
     const updateTime = () => {
       const currentTime = audioRef.current!.currentTime;
       setCurrentPlayingDuration(currentTime);
-      setDisplayDuration(`${formatTime(currentTime)} / ${formatTime(duration)}`);
+      setDisplayDuration(
+        `${formatTime(currentTime)} / ${formatTime(duration)}`
+      );
     };
 
     const updateMetadata = () => {
@@ -71,15 +74,40 @@ export function AudioControls() {
     setStreamUrl(Url); // Sync URL for all users
   });
 
+  socket.on("set-volume-value", (newVolume) => {
+    setVolume(Array.isArray(newVolume) ? newVolume : [newVolume]);
+  });
+
+  socket.on("set-changed-duration", (newTime, duration) => {
+    setDisplayDuration(`${formatTime(newTime)} / ${formatTime(duration)}`);
+    setCurrentPlayingDuration(newTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+    }
+  });
+
+  // In Progress
+  socket.on("set-play-value", (value: boolean) => {
+    setIsPlaying(value);
+    if (audioRef.current) {
+      if (!value) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+    }
+  });
+
   const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = Number(e.target.value);
     setCurrentPlayingDuration(newTime);
     if (audioRef.current) {
       audioRef.current.currentTime = newTime;
+      socket.emit("get-changed-duration", roomCode, newTime, duration);
     }
   };
 
-  const togglePlayback = () => {
+  const togglePlayback = async () => {
     if (!audioRef.current) return;
     const decodedUrl = decodeURIComponent(audioRef.current.src);
 
@@ -94,14 +122,15 @@ export function AudioControls() {
 
     if (decodedUrl !== streamUrl) {
       audioRef.current.src = streamUrl;
-      socket.emit("get-stream-url", streamUrl);
+      socket.emit("get-stream-url", roomCode, streamUrl);
     }
 
     if (!isPlaying) {
-      audioRef.current
+      await audioRef.current
         .play()
         .then(() => {
           setIsPlaying(true);
+          socket.emit("get-play-value", roomCode, true);
         })
         .catch((error) => {
           toast({
@@ -114,6 +143,7 @@ export function AudioControls() {
     } else {
       audioRef.current.pause();
       setIsPlaying(false);
+      socket.emit("get-play-value", roomCode, false);
     }
   };
 
@@ -134,8 +164,16 @@ export function AudioControls() {
 
       <div className="flex flex-col gap-y-4">
         <div className="flex justify-center items-center">
-          <Button onClick={togglePlayback} size="lg" className="hover-scale w-32">
-            {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+          <Button
+            onClick={togglePlayback}
+            size="lg"
+            className="hover-scale w-32"
+          >
+            {isPlaying ? (
+              <Pause className="w-6 h-6" />
+            ) : (
+              <Play className="w-6 h-6" />
+            )}
           </Button>
         </div>
 
@@ -144,7 +182,10 @@ export function AudioControls() {
             <Slider
               orientation="vertical"
               value={volume}
-              onValueChange={(newVolume) => setVolume(Array.isArray(newVolume) ? newVolume : [newVolume])}
+              onValueChange={(newVolume) => {
+                setVolume(Array.isArray(newVolume) ? newVolume : [newVolume]);
+                socket.emit("get-volume-value", roomCode, newVolume);
+              }}
               max={1}
               step={0.01}
               className="h-32 bg-black rounded-2xl flex items-center justify-center py-2 outline cursor-pointer"
@@ -160,7 +201,9 @@ export function AudioControls() {
               className="w-full bg-blue-300 cursor-pointer"
               onChange={handleDurationChange}
             />
-            <span className="text-sm font-medium text-gray-600">{displayDuration}</span>
+            <span className="text-sm font-medium text-gray-600">
+              {displayDuration}
+            </span>
           </div>
         </div>
       </div>

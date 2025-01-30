@@ -14,6 +14,7 @@ import {
 import { Input } from "./ui/input";
 import { ArrowRight } from "lucide-react";
 import { generateRandomCode, getDeviceInfo, getSocket } from "@/lib/utils";
+import { useRoom } from "@/context/RoomContext";
 
 interface DeviceInfo{
   deviceName: string;
@@ -27,7 +28,7 @@ interface RoomDevice {
 
 const RoomControl = () => {
   const { toast } = useToast();
-  const [roomCode, setRoomCode] = useState("");
+  const { roomCode , setRoomCode } = useRoom();
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false)
   const socket = getSocket()
 
