@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export const getDeviceInfo = async () => {
   const deviceName = navigator.userAgent;
-  const ipAddress = await publicIp();
+  const ipAddress = "192.213.331"   // await publicIp();
 
   return {
     deviceName,

@@ -1,19 +1,24 @@
 import { Server } from "socket.io";
 import { v4 as uuidv4 } from "uuid";
 
-interface DeviceInfo{
+interface DeviceInfo {
   deviceName: string;
-  ipAddress: string
+  ipAddress: string;
+}
+
+interface RoomDevice {
+  deviceInfo: DeviceInfo;
+  socketId: string;
 }
 
 const io = new Server({
   cors: {
-    origin: "*", // Frontend URL
+    origin: "*", // Frontend URL will be here
   },
 });
 
 
-
+const rooms: Record<string, RoomDevice[]> = {}
 
 // Handles client connections
 io.on("connection", (socket) => {
@@ -21,13 +26,29 @@ io.on("connection", (socket) => {
   console.log("User connected:", socket.id, socketClients);
 
   socket.on("disconnect", () => {
-    socketClients--
-    console.log("User disconnected", socketClients)
+    // Remove disconnected device from all rooms
+    for (const room in rooms) {
+      rooms[room] = rooms[room].filter((device) => device.socketId !== socket.id);
+
+      // Notify remaining users in the room
+      io.to(room).emit("update-devices", rooms[room]);
+    }
   });
 
-  socket.on("join-room", (roomCode, deviceInfo) => {
+  socket.on("join-room", (roomCode: string, deviceInfo: DeviceInfo, socketId: string) => {
     socket.join(roomCode);
-    socket.emit("device-info", deviceInfo)
+
+    if(!rooms[roomCode]){
+      rooms[roomCode] = [];
+    }
+
+     // Add new device to the room if not already present
+     if (!rooms[roomCode].some((device) => device.socketId === socketId)) {
+      rooms[roomCode].push({ deviceInfo, socketId });
+    }
+
+    // Broadcast updated device list to all users in the room
+    io.to(roomCode).emit("update-devices", rooms[roomCode]);
   });
   
   socket.on("get-stream-url", (streamUrl) => {

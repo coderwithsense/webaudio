@@ -9,21 +9,24 @@ interface DeviceInfo{
   ipAddress: string
 }
 
+interface RoomDevice{
+  deviceInfo: DeviceInfo;
+  ipAddress: string;
+}
+
 export function DeviceList() {
   const socket = getSocket()
-  const [devices, setDevices] = useState<DeviceInfo[]>([]);
+  const [devices, setDevices] = useState<RoomDevice[]>([]);
 
   useEffect(() => {
-    const handleDeviceInfo = (deviceInfo: DeviceInfo) => {
-      if (deviceInfo) {
-        setDevices((prevDevices) => [...prevDevices, deviceInfo]);
-      }
+    const handleUpdateDevices = (updatedDevices: RoomDevice[]) => {
+      setDevices(updatedDevices);
     };
 
-    socket.on("device-info", handleDeviceInfo);
+    socket.on("update-devices", handleUpdateDevices);
 
     return () => {
-      socket.off("device-info", handleDeviceInfo);
+      socket.off("update-devices", handleUpdateDevices);
     };
   }, []);
   return (
@@ -37,7 +40,7 @@ export function DeviceList() {
             className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary/80 transition-colors"
           >
             <div className="flex flex-col">
-              <span className="font-medium">{device.deviceName}</span>
+              <span className="font-medium">{device.deviceInfo.deviceName}</span>
               <span className="text-sm text-muted-foreground">{device.ipAddress}</span>
             </div>
             <Badge

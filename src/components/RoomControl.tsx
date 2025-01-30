@@ -15,6 +15,15 @@ import { Input } from "./ui/input";
 import { ArrowRight } from "lucide-react";
 import { generateRandomCode, getDeviceInfo, getSocket } from "@/lib/utils";
 
+interface DeviceInfo{
+  deviceName: string;
+  ipAddress: string;
+}
+
+interface RoomDevice {
+  deviceInfo: DeviceInfo;
+  socketId: string;
+}
 
 const RoomControl = () => {
   const { toast } = useToast();
@@ -28,10 +37,10 @@ const RoomControl = () => {
 
 
   const handleCreateRoom = async () => {
-    const deviceInfo = await getDeviceInfo()  // get the device info    
+    const deviceInfo: DeviceInfo = await getDeviceInfo()  // get the device info    
     const newRoomCode = generateRandomCode();
     setRoomCode(newRoomCode);
-    socket.emit("join-room", newRoomCode, deviceInfo) // and send device info to the websocket server 
+    socket.emit("join-room", newRoomCode, deviceInfo, socket.id) // and send device info to the websocket server 
       toast({
         variant: "default",
         title: "Room Created",
@@ -40,9 +49,17 @@ const RoomControl = () => {
   };
 
   const handleJoinRoom = async() => {
+    if(!roomCode){
+      toast({
+        variant: "destructive",
+        title: "Invalid Room Code",
+        description: `Enter a valid room code`,
+      });
+      return;
+    }
     setIsDialogOpen(false)
     const deviceInfo = await getDeviceInfo()  // get the device info    
-    socket.emit("join-room", roomCode, deviceInfo); // and send it to the websocket server
+    socket.emit("join-room", roomCode, deviceInfo, socket.id); // and send it to the websocket server
     toast({
       variant: "default",
       title: "Room Joined",
@@ -79,7 +96,6 @@ const RoomControl = () => {
                 <Input
                   type="text"
                   placeholder="Room Code"
-                  value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value)}
                 />
               </div>

@@ -147,7 +147,7 @@ export function AudioControls() {
               onValueChange={(newVolume) => setVolume(Array.isArray(newVolume) ? newVolume : [newVolume])}
               max={1}
               step={0.01}
-              className="h-32 bg-black rounded-2xl flex items-center justify-center py-2 outline"
+              className="h-32 bg-black rounded-2xl flex items-center justify-center py-2 outline cursor-pointer"
             />
             <Volume2 className="w-5 h-5" />
           </div>
@@ -157,7 +157,7 @@ export function AudioControls() {
               type="range"
               max={duration}
               value={currentPlayingDuration}
-              className="w-full bg-blue-300"
+              className="w-full bg-blue-300 cursor-pointer"
               onChange={handleDurationChange}
             />
             <span className="text-sm font-medium text-gray-600">{displayDuration}</span>
