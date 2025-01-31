@@ -21,11 +21,6 @@ interface DeviceInfo{
   ipAddress: string;
 }
 
-interface RoomDevice {
-  deviceInfo: DeviceInfo;
-  socketId: string;
-}
-
 const RoomControl = () => {
   const { toast } = useToast();
   const { roomCode , setRoomCode } = useRoom();
@@ -49,7 +44,7 @@ const RoomControl = () => {
       });
   };
 
-  const handleJoinRoom = async() => {
+  const handleJoinRoom = async () => {
     if(!roomCode){
       toast({
         variant: "destructive",

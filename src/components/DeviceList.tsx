@@ -3,6 +3,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getSocket } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import { useMusicState } from '@/context/MusicState';
+import { Audio } from 'react-loader-spinner';
+import { Button } from './ui/button';
 
 interface DeviceInfo{
   deviceName: string;
@@ -17,6 +20,7 @@ interface RoomDevice{
 export function DeviceList() {
   const socket = getSocket()
   const [devices, setDevices] = useState<RoomDevice[]>([]);
+  const { isPlaying, setIsPlaying } = useMusicState()
 
   useEffect(() => {
     const handleUpdateDevices = (updatedDevices: RoomDevice[]) => {
@@ -43,12 +47,22 @@ export function DeviceList() {
               <span className="font-medium">{device.deviceInfo.deviceName}</span>
               <span className="text-sm text-muted-foreground">{device.ipAddress}</span>
             </div>
-            <Badge
-              variant="outline"
-              className=' text-green-500 hover:text-white hover:bg-black'
-            >
-              Connected
-            </Badge>
+            {isPlaying ? 
+                <Audio 
+                  color="#3b82f6"
+                  width={30}
+                  height={30}
+                  ariaLabel="audio-playing"
+                />
+                :
+                <Button
+                  variant="outline"
+                  className="text-md cursor-pointer hover:text-white hover:bg-black"
+                  // Implement on Click function to play on the device 
+                >
+                Play
+                </Button>
+            }
           </div>
         ))}
       </div>

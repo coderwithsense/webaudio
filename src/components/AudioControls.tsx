@@ -8,13 +8,14 @@ import { Slider } from "./ui/slider";
 import { Input } from "./ui/input";
 import { getSocket } from "@/lib/utils";
 import { useRoom } from "@/context/RoomContext";
+import { useMusicState } from "@/context/MusicState";
 
 export function AudioControls() {
   const socket = getSocket();
   const { roomCode } = useRoom();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const {isPlaying, setIsPlaying}= useMusicState()
   const [volume, setVolume] = useState([0.2]);
   const [duration, setDuration] = useState<number>(0);
   const [currentPlayingDuration, setCurrentPlayingDuration] = useState<number>(0);
